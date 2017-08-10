@@ -1,0 +1,105 @@
+---
+title: "Times Person of the year"
+author: "GSD"
+date: "August 10, 2017"
+output: 
+ html_document:
+    number_sections: yes
+    toc: yes
+    theme: paper
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=FALSE,message=FALSE)
+```
+
+#Loading the required libraries,
+
+```{r}
+library(tidyverse)
+library(knitr)
+person=read.csv("archive.csv",header=TRUE,stringsAsFactors = FALSE)
+glimpse(person)
+```
+
+#Under what title are the honors rolled out?
+
+```{r}
+temp=person %>% group_by(Honor) %>% summarise(count=n()) %>% arrange(desc(count))
+ggplot(temp,aes(factor(Honor,levels=Honor),count,fill=Honor))+geom_bar(stat="identity")+coord_flip()+theme(axis.text.x = element_text(angle=90),plot.title=element_text(hjust=0.5,size=14),plot.subtitle = element_text(hjust=0.5,face="italic",family="verdana"))+xlab(label="Honor Title")+ylab(label="Count")+ggtitle("Honors by Title",subtitle="Count of Honors by title")
+```
+
+
+Starting from 1927 till 2016,Times magazine has recognised influencial people/group under 13 titles,the most being "Man of the year"(56 times) ,followed by "Person of the year"(16 times).Times has also recognised group of people under "Persons of the year","Man and Wife of the year","Man and Woman of the year". "Machine of the year","Planet of the year " are interesting titles provided by Times.
+
+#Has anyone garnered title more than once?
+
+```{r}
+length(unique(person$Name))
+temp=person %>% group_by(Name) %>% summarise(count=n()) %>% arrange(-count)
+temp=subset(temp,count>1)
+ggplot(temp,aes(factor(Name,levels=Name),count,fill=Name))+geom_bar(stat="identity")+coord_flip()+theme(axis.text.x = element_text(angle=90),plot.title=element_text(hjust=0.5,size=14),plot.subtitle = element_text(hjust=0.5,face="italic",family="verdana"))+xlab(label="Person")+ylab(label="Count")+ggtitle("Influential more than once!!",subtitle="Recognition more than one time")
+```
+
+As seen from the graph,Mr.Franklin D Roosevelt has been recognised by the magazine thrice and rest of the leaders have been recognised twice.One interesting thing to be observed here is that most of the leaders have been the presidents of great nations.Let us drill down further to find out for which reason were they recognised.
+
+##Drilling down further...
+
+```{r,fig.width=7,fig.height=10}
+temp=left_join(temp,person,by="Name")
+ggplot(temp,aes(Title,fill=Name))+geom_bar(stat="count")+theme(axis.text.x = element_text(angle=90),plot.title=element_text(hjust=0.5,size=14),plot.subtitle = element_text(hjust=0.5,face="italic",family="verdana"),legend.position="bottom")+facet_wrap(~Category,scales="free")+xlab(label="Title")+ylab(label="Count")+ggtitle("Influential more than once!!",subtitle="Sorting out persons by title and category")
+```
+
+
+
+It is evident that in most cases,Person of the year has been awarded to "  President of United States" and the category recognised is 'Politics' and 'War'  .For which purpose has the person been recognised?
+
+```{r}
+ggplot(temp,aes(Name,Context))+geom_count(colour="red",data=temp,na.rm=TRUE,show.legend=TRUE)+theme(axis.text.x = element_text(angle=90),plot.title=element_text(hjust=0.5,size=14),plot.subtitle = element_text(hjust=0.5,face="italic",family="verdana"),legend.position="right")+xlab(label="Name")+ylab(label="Context")+ggtitle("Influential more than once!!",subtitle="Reason for Recognition ")
+```
+
+
+
+We see that except for President Barrack Obama & George W Bush who have been given person of the year twice for Presidential Elections others have got recognized for different reasons every time.
+
+#Which country hosts most persons under Times "Person of the year"??
+
+```{r}
+temp=person %>% group_by(Country) %>% summarise(count=n()) %>% arrange(-count)
+ggplot(temp,aes(factor(Country,level=Country),count,fill=Country))+geom_bar(stat="identity")+theme(axis.text.x = element_text(angle=90),plot.title=element_text(hjust=0.5,size=14),plot.subtitle = element_text(hjust=0.5,face="italic",family="verdana"),legend.position="none")+xlab(label="Country")+coord_flip()+ylab(label="Count")+ggtitle("Influential person-Country",subtitle="Graph of country having most person of the year")
+```
+
+
+
+From the graph ,it is seen that persons belonging to US have been recognised more than 60 times followed by Soviet Unions(6 times),there is a missing category under country which has been recognised 5 times.Is it because of data non availability or something else??Lets analyse.
+
+##Getting sense of missing data in Countries
+
+```{r,fig.height=6.5}
+temp=person[which(person$Country==""),]
+ggplot(temp,aes(Honor,Name,fill=Name))+geom_count(colour="red",data=temp)+theme(axis.text.x = element_text(angle=90),plot.title=element_text(hjust=0.5,size=14),plot.subtitle = element_text(hjust=0.5,face="italic",family="verdana"),legend.position="none")+facet_grid(Context~Category,scales="free")+xlab(label="Honor")+ylab(label="Name")+ggtitle("Who gets the Honor??",subtitle="Times recognitions outside normal Categories!!")
+```
+
+
+Thus from the data we understand that  due recognition has been given under  Planet of the year(The Endangered Earth),Person of the year(The Protester,The Ebola Fighters,You),Machine of the year(The computer)
+
+Here are some interesting articles to read when TIMES had honored them,
+
+1.https://en.wikipedia.org/wiki/You_(Time_Person_of_the_Year)
+
+2.http://thisdayintechhistory.com/12/26/personal-computer-man-of-the-year/
+
+3.http://techland.time.com/2013/01/04/times-machine-of-the-year-30-years-later/
+
+#Which Category has been honored the most?
+
+```{r}
+temp=person %>% group_by(Category) %>% summarise(count=n()) %>% arrange(-count)
+ggplot(temp,aes(factor(Category,levels=Category),count,fill=Category))+geom_bar(stat="identity")+coord_flip()+theme(axis.text.x = element_text(angle=90),plot.title=element_text(hjust=0.5,size=14),plot.subtitle = element_text(hjust=0.5,face="italic",family="verdana"),legend.position="none")+xlab(label="Category")+ylab(label="Count")+ggtitle("Category that received most honors")
+```
+
+
+People related to Politics(43 times) has been recognised as person of the year more when compared to other categories.The gap is huge between first and the second position.Thus it can be said that 95 % of the time people who had been the President ended up as person of the year going by the previous analysis.
+-War(20 times)
+
